@@ -44,7 +44,7 @@ fetch-kubeconfig:
 	python3 scripts/fetch_kubeconfig.py $(AWS_REGION) $(CP_ID) $(CP_IP)
 
 deploy-infra:
-	kubectl apply -f k8s/infra/
+	kubectl apply -f k8s/infra/ --request-timeout=5m
 	# Install Helm Charts for Monitoring
 	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 	helm repo update
@@ -53,9 +53,9 @@ deploy-infra:
 
 deploy-app: get-ecr-url
 	# Replace placeholder with actual ECR URL and apply
-	sed "s|REPLACE_ME_WITH_ECR_REPO_URL|$(ECR_URL)|g" k8s/app/deployment.yaml | kubectl apply -f -
-	kubectl apply -f k8s/app/service.yaml
-	kubectl apply -f k8s/app/hpa.yaml
+	sed "s|REPLACE_ME_WITH_ECR_REPO_URL|$(ECR_URL)|g" k8s/app/deployment.yaml | kubectl apply -f - --request-timeout=5m
+	kubectl apply -f k8s/app/service.yaml --request-timeout=5m
+	kubectl apply -f k8s/app/hpa.yaml --request-timeout=5m
 
 deploy: deploy-infra deploy-app
 
