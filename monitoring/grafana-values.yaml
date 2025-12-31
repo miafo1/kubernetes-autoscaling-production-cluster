@@ -1,0 +1,20 @@
+# grafana-values.yaml
+# Minimal configuration for Grafana
+
+persistence:
+  enabled: false # Disable PVC for demo
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+service:
+  type: NodePort
+  nodePort: 32000 # Fixed port for easy access
+  port: 80
+
+adminPassword: "admin" # Simple password for demo
