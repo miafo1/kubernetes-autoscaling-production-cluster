@@ -4,6 +4,8 @@ import time
 import json
 import subprocess
 import base64
+import gzip
+import io
 
 def run_command(cmd):
     try:
@@ -26,12 +28,12 @@ def main():
 
     print(f"Fetching Kubeconfig via SSM from {instance_id} ({public_ip}) in {region}...")
 
-    # 1. Send Command (Base64 encoded to avoid escaping issues)
-    # We use 'base64 -w 0' to ensure single line output if possible, or just standard base64
-    cmd_string = "sudo cat /etc/rancher/k3s/k3s.yaml | base64 -w 0"
+    # 1. Send Command (GZIP + Base64 encoded to fit in SSM 2500 char limit)
+    # k3s.yaml is ~3KB. SSM truncates at 2.5KB.
+    # Gzipping reduces it to ~800 bytes.
+    cmd_string = "sudo cat /etc/rancher/k3s/k3s.yaml | gzip | base64 -w 0"
     
     # Construct AWS CLI command
-    # We carefully quote the internal command
     send_cmd = f'aws ssm send-command --region {region} --instance-ids {instance_id} --document-name "AWS-RunShellScript" --parameters "commands=[\'{cmd_string}\']" --output json'
     
     send_output = run_command(send_cmd)
@@ -74,12 +76,10 @@ def main():
                 break
             elif status in ["Failed", "Cancelled", "TimedOut"]:
                 print(f"Command failed with status: {status}")
-                # Print stderr if available
                 print(invocations[0]['CommandPlugins'][0]['Output'])
                 sys.exit(1)
             else:
-                # Still InProgress or Pending
-                if retries % 5 == 0:
+                 if retries % 5 == 0:
                     print(f"Status: {status}...")
                 
         except (KeyError, IndexError, json.JSONDecodeError):
@@ -93,22 +93,19 @@ def main():
         sys.exit(1)
 
     try:
-        # Clean up any potential whitespace around the base64 string
         b64_str = output_content.strip()
-        decoded_bytes = base64.b64decode(b64_str)
+        compressed_bytes = base64.b64decode(b64_str)
+        # Decompress
+        decoded_bytes = gzip.decompress(compressed_bytes)
         yaml_content = decoded_bytes.decode('utf-8')
     except Exception as e:
-        print("Error decoding base64 output:")
+        print("Error decoding/decompressing output:")
         print(e)
         print("Raw output start:", output_content[:50])
         sys.exit(1)
 
     # Replace localhost with Public IP
     yaml_content = yaml_content.replace('127.0.0.1', public_ip)
-
-    # Validate minimal content
-    if "apiVersion: v1" not in yaml_content:
-        print("Warning: 'apiVersion: v1' not found in decoded content. File might be invalid.")
 
     # Write to file
     with open('k3s.yaml', 'w') as f:
