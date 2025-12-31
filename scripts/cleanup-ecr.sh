@@ -1,3 +1,4 @@
+#!/bin/bash
 # cleanup-ecr.sh
 # Delete all images from ECR repository before destroying infrastructure
 
