@@ -20,7 +20,7 @@ data "aws_ami" "ubuntu" {
 # --- Control Plane (Server) ---
 resource "aws_instance" "k3s_server" {
   ami           = data.aws_ami.ubuntu.id
-  instance_type = "t3.micro"
+  instance_type = "t3.small"  # Upgraded from t3.micro for better performance
   subnet_id     = aws_subnet.public_a.id # Control Plane in Public Subnet A
   
   iam_instance_profile   = aws_iam_instance_profile.k3s_server.name
@@ -80,7 +80,7 @@ resource "aws_instance" "k3s_server" {
 resource "aws_launch_template" "k3s_agent" {
   name_prefix   = "${var.cluster_name}-agent-lt-"
   image_id      = data.aws_ami.ubuntu.id
-  instance_type = "t3.micro"
+  instance_type = "t3.small"  # Upgraded from t3.micro for better performance
 
   iam_instance_profile {
     name = aws_iam_instance_profile.k3s_agent.name
