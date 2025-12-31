@@ -10,6 +10,11 @@ output "control_plane_ip" {
   value       = aws_instance.k3s_server.public_ip
 }
 
+output "control_plane_id" {
+  description = "Instance ID of the Control Plane (for SSM access)"
+  value       = aws_instance.k3s_server.id
+}
+
 output "vpc_id" {
   description = "VPC ID"
   value       = aws_vpc.main.id

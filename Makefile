@@ -37,10 +37,12 @@ app-push: get-ecr-url app-login
 
 # --- Kubernetes ---
 fetch-kubeconfig:
+	# Refreshing terraform state to ensure we have the instance ID
+	cd infra && terraform refresh
+	$(eval CP_ID := $(shell cd infra && terraform output -raw control_plane_id))
 	$(eval CP_IP := $(shell cd infra && terraform output -raw control_plane_ip))
-	ssh -o StrictHostKeyChecking=no ubuntu@$(CP_IP) "sudo cat /etc/rancher/k3s/k3s.yaml" > k3s.yaml
-	sed -i 's/127.0.0.1/$(CP_IP)/g' k3s.yaml
-	@echo "Kubeconfig saved to k3s.yaml. Run: export KUBECONFIG=$(PWD)/k3s.yaml"
+	chmod +x scripts/fetch_kubeconfig.sh
+	./scripts/fetch_kubeconfig.sh $(AWS_REGION) $(CP_ID) $(CP_IP)
 
 deploy-infra:
 	kubectl apply -f k8s/infra/
