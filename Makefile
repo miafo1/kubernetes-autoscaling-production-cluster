@@ -5,6 +5,11 @@ AWS_REGION ?= us-east-1
 CLUSTER_NAME ?= k3s-demo-cluster
 ECR_REPO_NAME ?= $(CLUSTER_NAME)-app
 
+# Automatically use k3s.yaml if it exists in the project root
+ifneq ("$(wildcard $(CURDIR)/k3s.yaml)","")
+    export KUBECONFIG := $(CURDIR)/k3s.yaml
+endif
+
 .PHONY: all infra-init infra-apply infra-destroy app-build app-push deploy clean
 
 all: infra-init infra-apply app-build app-push deploy
