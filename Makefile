@@ -41,8 +41,7 @@ fetch-kubeconfig:
 	cd infra && terraform refresh
 	$(eval CP_ID := $(shell cd infra && terraform output -raw control_plane_id))
 	$(eval CP_IP := $(shell cd infra && terraform output -raw control_plane_ip))
-	chmod +x scripts/fetch_kubeconfig.sh
-	./scripts/fetch_kubeconfig.sh $(AWS_REGION) $(CP_ID) $(CP_IP)
+	python3 scripts/fetch_kubeconfig.py $(AWS_REGION) $(CP_ID) $(CP_IP)
 
 deploy-infra:
 	kubectl apply -f k8s/infra/
