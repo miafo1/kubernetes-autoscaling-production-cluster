@@ -45,11 +45,11 @@ fetch-kubeconfig:
 
 deploy-infra:
 	kubectl apply -f k8s/infra/ --request-timeout=5m --validate=false
-	# Install Helm Charts for Monitoring
+	# Install Helm Charts for Monitoring (without --wait to avoid TLS timeouts on t3.micro)
 	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 	helm repo update
-	helm upgrade --install prometheus prometheus-community/prometheus -f monitoring/prometheus-values.yaml --wait --timeout 10m
-	helm upgrade --install grafana prometheus-community/grafana -f monitoring/grafana-values.yaml --wait --timeout 10m
+	helm upgrade --install prometheus prometheus-community/prometheus -f monitoring/prometheus-values.yaml --timeout 5m
+	helm upgrade --install grafana prometheus-community/grafana -f monitoring/grafana-values.yaml --timeout 5m
 
 deploy-app: get-ecr-url
 	# Replace placeholder with actual ECR URL and apply
