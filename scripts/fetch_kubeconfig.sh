@@ -7,12 +7,13 @@ PUBLIC_IP=$3
 
 echo "Fetching Kubeconfig via SSM from Instance $INSTANCE_ID ($PUBLIC_IP) in $REGION..."
 
-# 1. Execute Command
-CMD_ID=$(aws ssm execute-command \
+# 1. Execute Command (send-command)
+# Note: execute-command is for ECS, send-command is for SSM
+CMD_ID=$(aws ssm send-command \
     --region "$REGION" \
     --instance-ids "$INSTANCE_ID" \
     --document-name "AWS-RunShellScript" \
-    --commands "sudo cat /etc/rancher/k3s/k3s.yaml" \
+    --parameters 'commands=["sudo cat /etc/rancher/k3s/k3s.yaml"]' \
     --query "Command.CommandId" \
     --output text)
 
@@ -27,12 +28,15 @@ while [ "$STATUS" != "Success" ]; do
         exit 1
     fi
     sleep 2
+    
+    # Check status using list-command-invocations
     STATUS=$(aws ssm list-command-invocations \
         --region "$REGION" \
         --command-id "$CMD_ID" \
         --details \
         --query "CommandInvocations[0].Status" \
         --output text)
+        
     echo "Status: $STATUS"
     RETRIES=$((RETRIES+1))
     
