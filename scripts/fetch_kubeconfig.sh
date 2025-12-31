@@ -61,7 +61,11 @@ aws ssm list-command-invocations \
     --query "CommandInvocations[0].CommandPlugins[0].Output" \
     --output text > k3s.yaml
 
-# 4. Patch Public IP
+# 4. Cleanup & Patch
+# Remove any garbage logs before the YAML start (e.g. sudo warnings)
+sed -i -n '/apiVersion: v1/,$p' k3s.yaml
+
+# Patch Public IP
 if [ -s k3s.yaml ]; then
     sed -i "s/127.0.0.1/$PUBLIC_IP/g" k3s.yaml
     echo "Success! Kubeconfig saved to k3s.yaml"
