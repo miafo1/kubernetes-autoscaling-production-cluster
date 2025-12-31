@@ -59,6 +59,11 @@ deploy-app: get-ecr-url
 
 deploy: deploy-infra deploy-app
 
+# Lightweight deployment for t3.micro (skips Prometheus/Grafana)
+deploy-lightweight:
+	chmod +x scripts/deploy-lightweight.sh
+	./scripts/deploy-lightweight.sh
+
 load-test:
 	$(eval ALB_DNS := $(shell cd infra && terraform output -raw alb_dns_name))
 	k6 run -e ALB_DNS=$(ALB_DNS) scripts/load-test.js
