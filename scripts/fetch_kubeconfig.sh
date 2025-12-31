@@ -23,7 +23,7 @@ echo "SSM Command ID: $CMD_ID. Waiting for execution..."
 STATUS="Pending"
 RETRIES=0
 while [ "$STATUS" != "Success" ]; do
-    if [ $RETRIES -gt 20 ]; then
+    if [ $RETRIES -gt 150 ]; then
         echo "Timeout waiting for SSM command."
         exit 1
     fi
